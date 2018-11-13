@@ -1,0 +1,63 @@
+#include "myfind.h"
+
+static int follow_symlink = 0;
+int simple_current_find(char *cur, int d)
+{
+    DIR *dr = opendir(cur);
+    if (dr == NULL)
+    {
+        warnx("'%s': No such file or directory", cur);
+        return 1;
+    }
+    struct dirent *de;
+    while ((de = readdir(dr)) != NULL)
+    {
+        char *dirname = de->d_name;
+        if ((my_strcmp(dirname, ".") == 0) || (my_strcmp(dirname, "..") == 0))
+            continue;
+        char c = '/';
+        if ((de->d_name[0] == '/') || (cur[my_strlen(cur) - 1] == '/'))
+            c = '\0';
+        if (d == 1)
+        {
+            check_symlink_and_dir(de, cur, d);
+            printf("%s%c%s\n", cur, c, de->d_name);
+        }
+        else
+        {
+            printf("%s%c%s\n", cur, c, dirname);
+            check_symlink_and_dir(de, cur, d);
+        }
+    }
+    closedir(dr);
+    return 0;
+}
+
+int simple_find(int argc, char *argv[], int options, int sml)
+{
+    follow_symlink = sml;
+    int ret = 0;
+    if (options == argc -1)
+    {
+        printf(".\n");
+        ret = simple_current_find(".", 0);
+        return ret;
+    }
+    for (int i = 1; i < argc; i++)
+    {
+        int new;
+        if (argv[i][0] != '-')
+        {
+            printf("%s\n", argv[i]);
+            new = simple_current_find(argv[i], 0);
+        }
+        else if (argv[i][1] == '\0')
+        {
+            printf("%s\n", argv[i]);
+            new = simple_current_find(argv[i], 0);
+        }
+        if (new == 1)
+            ret = 1;
+    }
+    return ret;
+}

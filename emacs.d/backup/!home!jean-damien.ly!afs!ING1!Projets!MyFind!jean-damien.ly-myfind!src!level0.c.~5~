@@ -1,0 +1,45 @@
+#include "myfind.h"
+
+int simple_current_find(char *cur)
+{
+    DIR *dr = opendir(cur);
+    if (dr == NULL)
+    {
+        warnx("'%s': No such file or directory", cur);
+        return 1;
+    }
+    struct dirent *de;
+    while ((de = readdir(dr)) != NULL)
+    {
+        if ((my_strcmp(de->d_name, ".") == 0))
+            printf("%s\n", cur);
+        else if (my_strcmp(de->d_name, "..") != 0)
+        {
+            char c = '/';
+            if ((de->d_name[0] == '/') || (cur[my_strlen(cur) - 1] == '/'))
+                c = '\0';
+            if (check_type(de->d_type, 2) == 1)
+            {
+                char new[my_strlen(cur) + my_strlen(de->d_name) - 1];
+                my_strcat(new, cur, de->d_name);
+                simple_current_find(new);
+            }
+            else
+                printf("%s%c%s\n", cur, c, de->d_name);
+        }
+    }
+    closedir(dr);
+    return 0;
+}
+
+int simple_find(int argc, char *argv[])
+{
+    int ret = 0;
+    for (int i = 1; i < argc; i++)
+    {
+        int new = simple_current_find(argv[i]);
+        if (new == 1)
+            ret = 1;
+    }
+    return ret;
+}

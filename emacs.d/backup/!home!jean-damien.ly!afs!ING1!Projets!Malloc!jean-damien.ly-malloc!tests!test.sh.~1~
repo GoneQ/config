@@ -1,0 +1,48 @@
+#!/bin/bash
+
+total=0
+count=0
+
+while IFS='' read line; do
+    T=$(./myfind $line 2>/dev/null)
+    ret1=$(echo $?)
+    expected=$(find $line 2>/dev/null)
+    ret2=$(echo $?)
+    if [ "$T" = "$expected" ]; then
+        if [ $ret1 -eq $ret1 ]; then
+            printf "\e[1m \e[0;32m%-8s\033[0m | %-20s\n" "[SUCCESS]" "$line"
+            failed="0"
+            count=$((count + 1))
+        else
+            printf "\e[1m \e[0;31m%-s\033[0m | %-20s\n" "[FAILURE]" "$line"
+            if [ "$1" = "-full" ]; then
+                diff <(echo "$T") <(echo "$expected")
+                failed="0"
+            fi
+            failed="1"
+        fi
+    else
+        printf "\e[1m \e[0;31m%-s\033[0m | %-20s\n" "[FAILURE]" "$line"
+        if [ "$1" = "-full" ]; then
+            diff <(echo "$T") <(echo "$expected")
+            failed="0"
+        fi
+        failed="1"
+    fi
+    total=$((total + 1))
+done < tests/command
+
+percentage=$(bc <<< "scale=2;$count/$total*100")
+if [ $total -eq $count ]; then
+    printf "\n \e[4m\e[92mSCORE:\033[0m \e[92m%d/%d 100%s\033[0m\n" $count $total "%"
+else
+    printf "\n \e[4m\e[91mSCORE:\033[0m \e[91m%d/%d %s%s\033[0m\n" $count $total "$percentage" "%"
+fi
+
+if [ "$failed" = "1" ]; then
+    if [ "$1" != "-full" ]; then
+        printf "\e[96mRun with -full to see diff\033[0m\n"
+    fi
+fi
+echo " "
+

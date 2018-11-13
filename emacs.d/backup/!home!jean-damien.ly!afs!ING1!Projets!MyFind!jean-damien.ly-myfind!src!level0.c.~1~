@@ -1,0 +1,16 @@
+#include "myfind.h"
+
+int simple_find(void)
+{
+    DIR *dr = opendir(".");
+    if (dr == NULL)
+    {
+        warnx("nope");
+        return 1;
+    }
+    struct dirent *de;
+    while ((de = readir(dr)) != NULL)
+        printf("%s\n", de->d_name);
+    closedir(dr);
+    return 0;
+}

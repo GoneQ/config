@@ -1,0 +1,130 @@
+#include "malloc.h"
+#include <stddef.h>
+#include <unistd.h>
+
+int mystrlen(char *a)
+{
+    int i = 0;
+    while (a[i] != '\0')
+        i++;
+    return i;
+}
+
+void put(char *a)
+{
+    write(STDOUT_FILENO, a, mystrlen(a));
+    write(STDOUT_FILENO, "\n", 1);
+}
+
+void print_int(char *a, int size, char *b)
+{
+    if (a)
+        write(STDOUT_FILENO, a, mystrlen(a) - 1);
+    char abc[8];
+    int i = 0;
+    while (size != 0)
+    {
+        abc[i] = size % 10 + '0';
+        size = size / 10 ;
+        i++;
+    }
+    abc[i] = '\0';
+    for (int j = 0; j != i / 2; j++)
+    {
+        char save = abc[j];
+        abc[j] = abc[i - 1 - j];
+        abc[i - 1 - j] = save;
+    }
+    write(STDOUT_FILENO, abc, i);
+    if (b)
+        write(STDOUT_FILENO, b, mystrlen(b) - 1);
+}
+
+struct chunk* find_chunk(size_t size)
+{
+    struct chunk *b = get_base();
+    while ((b) && ((b->free != 'f') ||
+                               (b->size < size + sizeof(struct chunk))))
+    {
+        b = b->next;
+    }
+    if (b == NULL)
+    {
+        b = get_base();
+        while (b->next)
+            b = b->next;
+        void *addr = mmap(NULL, 4096, PROT_READ | PROT_WRITE,
+                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        if (addr == MAP_FAILED)
+            return NULL;
+        struct chunk *new = addr;
+        new->size = 4096 - sizeof(struct chunk);
+        new->free = 'f';
+        char *chartmp = addr;
+        chartmp += sizeof(struct chunk);
+        void *tmp = chartmp;
+        new->data = tmp;
+        b->next = new;
+        new->prev = b;
+        new->page = 'a';
+        if (b->page == 'a')
+            new->page = 'b';
+        return find_chunk(size);
+    }
+    return b;
+}
+
+static int check_address(struct chunk *cur, struct chunk *next)
+{
+    void *vcur = cur;
+    char *ccur = vcur;
+    ccur += cur->size + sizeof(struct chunk);
+    vcur = ccur;
+    cur = vcur;
+    return (cur == next);
+}
+
+static void *free_big(struct chunk *chunk, void *ptr)
+{
+    struct chunk *prev = chunk->prev;
+    struct chunk *next = chunk->next;
+    if (prev)
+        prev->next = next;
+    if (next)
+        next->prev = prev;
+    munmap(ptr, chunk->size + sizeof(struct chunk));
+    return NULL;
+}
+
+void *free_ptr(void *ptr)
+{
+    struct chunk *c = get_chunk(ptr);
+    if (!c)
+        return NULL;
+    c->free = 'f';
+    if (c->size > 4096 - sizeof(struct chunk))
+        return free_big(c, ptr);
+    char p = c->page;
+    if ((c->next) && (c->next->free == 'f') && (c->next->page == p))
+    {
+        if (check_address(c, c->next))
+        {
+            c->next->prev = c->prev;
+            c->size += c->next->size + sizeof(struct chunk);
+            if (c->next->next)
+                c->next->next->prev = c;
+            c->next = c->next->next;
+        }
+    }
+    if ((c->prev) && (c->prev->free == 'f') && (c->prev->page == p))
+    {
+        if (check_address(c->prev, c))
+        {
+            c->prev->next = c->next;
+            c->prev->size += c->size + sizeof(struct chunk);
+            if (c->next)
+                c->next->prev = c->prev;
+        }
+    }
+    return NULL;
+}

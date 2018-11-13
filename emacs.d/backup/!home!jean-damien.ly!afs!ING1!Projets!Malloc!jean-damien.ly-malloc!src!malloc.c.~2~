@@ -1,0 +1,43 @@
+#include <stddef.h>
+#include "malloc.h"
+
+__attribute__((visibility("default")))
+void *realloc(void __attribute__((unused)) *ptr,
+             size_t __attribute__((unused)) size)
+{
+    if (size == 0)
+        return free_ptr(ptr);
+    void *new = alloc(size);
+    if (ptr)
+        memcpy(new, ptr, size);
+    return new;
+}
+
+__attribute__((visibility("default")))
+void *malloc(size_t __attribute__((unused)) size)
+{
+    return realloc(NULL, size);
+}
+
+__attribute__((visibility("default")))
+void free(void __attribute__((unused)) *ptr)
+{
+    if (ptr)
+    {
+        realloc(ptr, 0);
+    }
+}
+
+__attribute__((visibility("default")))
+void *calloc(size_t __attribute__((unused)) nmemb,
+             size_t __attribute__((unused)) size)
+{
+    size_t res;
+    if (__builtin_mul_overflow(nmemb, size, &res))
+    {
+        return NULL;
+    }
+    void *ptr = realloc(NULL, res);
+    memset(ptr, 0, res);
+    return ptr;
+}

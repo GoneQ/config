@@ -1,0 +1,29 @@
+#include "myiso.h"
+
+void cd_command(char **fp, char *read, int index)
+{
+    if ((strcmp(read, "") == 0) || (strcmp(read, "..") == 0))
+    {
+        *fp = get_mmap();
+        printf("Changing to '/' directory\n");
+    }
+    else if (strcmp(read, ".") == 0)
+    {
+        printf("Changing to '/' directory\n");
+    }
+    else
+    {
+        void *ident = get_mmap() + ISO_PRIM_VOLDESC_BLOCK * ISO_BLOCK_SIZE;
+        struct iso_prim_voldesc *voldesc = ident;
+        struct iso_dir dir = voldesc->root_dir;
+        index = dir.data_blk.le;
+        void *tmp = check_argument(*fp, read, index);
+        char *c = tmp;
+        c -= index * ISO_BLOCK_SIZE;
+        if (!tmp)
+            return;
+        tmp = c;
+        *fp = tmp;
+        printf("Changing to '%s' directory\n", read);
+    }
+}

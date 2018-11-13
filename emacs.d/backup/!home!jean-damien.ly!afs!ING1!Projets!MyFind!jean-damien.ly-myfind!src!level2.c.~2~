@@ -1,0 +1,6 @@
+#include "myfind.h"
+
+void check_expressions(void)
+{
+    
+}

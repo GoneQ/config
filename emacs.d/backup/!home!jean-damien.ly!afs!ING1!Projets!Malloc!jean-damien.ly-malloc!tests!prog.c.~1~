@@ -1,0 +1,24 @@
+#include <stdlib.h>
+int main(void)
+{
+    char *s1 = malloc(300);
+    char *s2 = malloc(300);
+    char *s3 = malloc(300);
+    char *s4 = malloc(300);
+    char *s5 = malloc(300);
+    char *s6 = malloc(300);
+    char *s7 = malloc(300);
+    char *s8 = malloc(300);
+    char *s9 = malloc(300);
+    char *s10 = malloc(300);
+    char *s11 = malloc(300);
+    char *s12 = malloc(300);
+    char *s13 = malloc(300);
+    char *s14 = malloc(300);
+    char *s15 = malloc(300);
+    char *s16 = malloc(300);
+    char *s17 = malloc(300);
+    char *s18 = malloc(300);
+    char *s19 = malloc(300);
+    char *s20 = malloc(300);
+}

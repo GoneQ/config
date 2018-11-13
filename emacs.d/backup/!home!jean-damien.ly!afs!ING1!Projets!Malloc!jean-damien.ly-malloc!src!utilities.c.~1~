@@ -1,0 +1,50 @@
+#include "malloc.h"
+#include <stddef.h>
+
+static struct freelist set_get_freelist(int i, struct freelist toset)
+{
+    static struct freelist freelist;
+    if (i == 1)
+        return freelist;
+    freelist = toset;
+    return freelist;
+}
+
+size_t get_mult(size_t i)
+{
+    return i;
+}
+
+void *get_page(void)
+{
+    void *tmp = mmap(NULL, 4096, PROT_READ | PROT_WRITE,
+                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (tmp == MAP_FAILED)
+        return NULL;
+    return tmp;
+}
+
+
+void *alloc(size_t size)
+{
+    struct freelist freelist = set_get_freelist(1, NULL);
+    if (!freelist)
+        return NULL;
+    while (freelist.size < size)
+    {
+        freelist = freelist.next;
+        if (!freelist)
+            break;
+    }
+    if (!freelist)
+        return NULL;
+    if (freelist.size == size)
+        return freelist.pointer;
+    freelist.size = freelist.size - size;
+    void *to_return = freelist.pointer;
+    char *p = freelist.pointer;
+    p = p + size;
+    void *tmp = p;
+    freelist.pointer = tmp;
+    return to_return;
+}

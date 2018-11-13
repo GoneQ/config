@@ -1,0 +1,95 @@
+#include "army.h"
+
+static float distance(struct car *car, struct vector2 *next)
+{
+    float a = car->position.x;
+    float b = car->position.y;
+    float x = next->x;
+    float y = next->y;
+    return sqrt((b - a) * (b - a) + (x - y) * (x - y));
+}
+
+enum move check_forward(struct car *car, struct vector2 *next)
+{
+    struct car *accelerate = car_clone(car);
+    struct car *brake = car_clone(car);
+    enum status a = car_move(accelerate, ACCELERATE);
+    enum status b = car_move(brake, BRAKE);
+    enum move ret = BRAKE;
+    if (distance(accelerate, next) < distance(break, next))
+        ret = ACCELERATE;
+    car_delete(accelerate);
+    car_delete(brake);
+    b = a;
+    return ret;
+}
+
+enum move check_right(struct car *car, struct vector2 *next)
+{
+    struct car *bright = car_clone(car);
+    struct car *brake = car_clone(car);
+    struct car *right = car_clone(car);
+    struct car *aright = car_clone(car);
+    enum status br = car_move(bright, BRAKE_AND_TURN_RIGHT);
+    enum status b = car_move(brake, BRAKE);
+    enum status ar = car_move(aright, ACCELERATE_AND_TURN_RIGHT);
+    enum status r = car_move(right, TURN_RIGHT);
+    enum move ret = BRAKE_AND_TURN_RIGHT;
+    float d1 = distance(bright, next);
+    float d2 = distance(brake, next);
+    float d3 = distance(right, next);
+    if (d2 < d1)
+    {
+        d1 = d2;
+        ret = BRAKE;
+    }
+    if (d3 < d1)
+    {
+        d1 = d3;
+        ret = TURN_RIGHT;
+    }
+    if (distance(aright, next) < d1)
+        ret = ACCELERATE_AND_TURN_RIGHT;
+    car_delete(bright);
+    car_delete(brake);
+    car_delete(aright);
+    car_delete(right);
+    br = b;
+    ar = r;
+    return ret;
+}
+
+enum move check_left(struct car *car, struct vector2 *next)
+{
+    struct car *bleft = car_clone(car);
+    struct car *brake = car_clone(car);
+    struct car *aleft = car_clone(car);
+    struct car *left = car_clone(car);
+    enum status bl = car_move(bleft, BRAKE_AND_TURN_LEFT);
+    enum status b = car_move(brake, BRAKE);
+    enum status al = car_move(aleft, ACCELERATE_AND_TURN_LEFT);
+    enum status l = car_move(left, TURN_LEFT);
+    enum move ret = BRAKE_AND_TURN_LEFT;
+    float d1 = distance(bleft, next);
+    float d2 = distance(brake, next);
+    float d3 = distance(left, next);
+    if (d2 < d1)
+    {
+        d1 = d2;
+        ret = BRAKE;
+    }
+    if (d3 < d1)
+    {
+        d1 = d3;
+        ret = TURN_LEFT;
+    }
+    if (distance(aleft, next) < d1)
+        ret = ACCELERATE_AND_TURN_LEFT;
+    car_delete(bleft);
+    car_delete(brake);
+    car_delete(aleft);
+    car_delete(left);
+    bl = b;
+    al = l;
+    return ret;
+}

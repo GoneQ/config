@@ -1,0 +1,10 @@
+#include "myfind.h"
+
+int main(int argc, char* argv[])
+{
+    if (argc == 1)
+        return simple_current_find(".");
+    else
+        return simple_find(argc, argv);
+    return 0;
+}

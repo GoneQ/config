@@ -1,0 +1,662 @@
+#include <stdio.h>
+#include <math.h>
+#include <string.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <time.h>
+#include <stdbool.h>
+
+unsigned int_width(int i)
+{
+    if (i == 0)
+        return 1;
+    unsigned res = 0;
+    if (i < 0)
+    {
+        i = -i;
+        res++;
+    }
+    while (i != 0)
+    {
+        i = i / 10;
+        res++;
+    }
+    return res;
+}
+
+/*
+unsigned ints_width(const int* tab, unsigned count)
+{
+    unsigned max_pos = 0;
+    int max = tab[0];
+    if (max < 0)
+        max = -max;
+    unsigned res = 0;
+    int a = 0;
+    for (unsigned i = 1; i < count; ++i)
+    {
+        int current = tab[i];
+       if (current < 0)
+        {
+            current = (-current);
+            max = max / 10;
+            a = 1;
+        }
+        if (current > max)
+        {
+            max = current;
+            max_pos = i;
+        }
+        else if (a == 1)
+        {
+            a = 0;
+            max = max * 10;
+        }
+
+    }
+    res += int_width(tab[max_pos]);
+    return res;
+}
+*/
+
+unsigned ints_width(const int *tab, unsigned count)
+{
+    int max = int_width(tab[0]);
+    for (unsigned i = 1; i < count; i++)
+    {
+        int cur = int_width(tab[i]);
+        if (max < cur)
+            max = cur;
+    }
+    return max;
+}
+
+void print_int_array(FILE* out, const int* tab, unsigned count)
+{
+    int width = ints_width(tab, count);
+    int col_width = int_width(count - 1);
+    int col = col_width + 2;
+    fprintf(out, "%*s[0]", col_width - 1, "");
+    for (unsigned i = 0; i < count; i++)
+    {
+        fprintf(out, " %*s%d", width - int_width(tab[i]), "", tab[i]);
+        col += width + 1;
+        if ((col + width + 1 > 80) && (i + 1 < count))
+        {
+            int space = col_width - int_width(i + 1);
+            fprintf(out, "\n");
+            if (space <= 0)
+                fprintf(out, "[%d]", i + 1);
+            else
+                fprintf(out, "%*s[%d]", space, "", i + 1);
+            col = col_width + 2;
+        }
+    }
+    fprintf(out, "\n");
+}
+
+void insert_sort(int* tab, unsigned count)
+{
+    for (unsigned i = 1; i < count; ++i)
+    {
+        int save = tab[i];
+        unsigned j = 0;
+        for (; j < i; ++j)
+        {
+            if (tab[j] < save)
+                continue;
+            break;
+        }
+        for (unsigned k = i; k > j; k--)
+        {
+            tab[k] = tab[k - 1];
+        }
+        tab[j] = save;
+    }
+}
+
+
+void insert_sort_cmp(int* tab, unsigned count, int (*cmp)(int a, int b))
+{
+    for (unsigned i = 1; i < count; ++i)
+    {
+        int save = tab[i];
+        int j = i - 1;
+        while ((j >= 0) && (cmp(save, tab[j]) == -1))
+        {
+            tab[j + 1] = tab[j];
+            j = j - 1;
+        }
+        tab[j + 1] = save;
+    }
+}
+
+unsigned linear_search(const int* tab, unsigned count, int val,
+                       int (*cmp)(int a, int b))
+{
+    unsigned i = 0;
+    for (; (i < count) && (cmp(tab[i], val) == -1); i++)
+        continue;
+    return i;
+}
+
+unsigned binary_search(int* tab, unsigned count, int val,
+                       int (*cmp)(int a, int b))
+{
+    unsigned b = 0;
+    unsigned e = count;
+    while (b < e)
+    {
+        unsigned m = b + ((e - b) / 2);
+        int res = cmp(val, tab[m]);
+        if (res == 0)
+            return m;
+        else
+        {
+            if (res == -1)
+                e = m;
+            else
+                b = m + 1;
+        }
+    }
+    return b;
+}
+
+void bs_insert_sort_cmp(int *tab, unsigned count, int (*cmp)(int a, int b))
+{
+    for (unsigned i = 1; i < count; i++)
+    {
+        int key = tab[i];
+        int j = binary_search(tab, i, key, cmp);
+        memmove(tab + j + 1, tab + j, (i - j) * sizeof(int));
+        tab[j] = key;
+    }
+}
+
+unsigned interpolate(int *tab, unsigned b, unsigned e, int val,
+                     int (*cmp)(int, int))
+{
+    int res1 = cmp(tab[b], val);
+    int res2 = cmp(tab[e], val);
+    if (res1 >= 0)
+        return b;
+    if (res2 <= 0)
+        return e;
+    float diff1 = (tab[e] - tab[b]);
+    float diff2 = (e - b);
+    float slope = diff1 / diff2;
+    float res = (val - tab[b]) / slope + b;
+    return roundf(res);
+}
+
+unsigned interpolation_search(int *tab, unsigned count, int val,
+                              int (*cmp)(int a, int b))
+{
+    unsigned b = 0;
+    unsigned e = count;
+    while (b < e)
+    {
+        unsigned m = interpolate(tab, b, e - 1, val, cmp);
+        int res = cmp(val, tab[m]);
+        if (res == 0)
+            return m;
+        else
+        {
+            if (res == -1)
+                e = m;
+            else
+                b = m + 1;
+        }
+    }
+    return b;
+}
+
+void heapify(int* tab, unsigned pos, unsigned n)
+{
+    unsigned l = 2 * pos + 1;
+    unsigned r = 2 * pos + 2;
+    unsigned g = 0;
+    if ((l < n) && (tab[l] > tab[pos]))
+        g = l;
+    else
+        g = pos;
+    if ((r < n) && (tab[r] > tab[g]))
+        g = r;
+    if (g != pos)
+    {
+        int save = tab[pos];
+        tab[pos] = tab[g];
+        tab[g] = save;
+        heapify(tab, g, n);
+    }
+}
+
+void make_heap(int* tab, unsigned n)
+{
+    unsigned i = n / 2 - 1;
+    for (; i != 0; i--)
+        heapify(tab, i, n);
+    if (i == 0)
+        heapify(tab, 0, n);
+}
+
+bool check_heap_rec(int *heap, unsigned n, unsigned i)
+{
+    unsigned l = i * 2 + 1;
+    unsigned r = i * 2 + 2;
+    if (l >= n)
+        return true;
+    if (r >= n)
+    {
+        if ((heap[l] < heap[i]))
+            return true;
+        return false;
+    }
+    if ((heap[i] < heap[l]) || (heap[i] < heap[r]))
+        return false;
+    return check_heap_rec(heap, n, l) && check_heap_rec(heap, n, r);
+}
+
+bool check_heap(int* heap, unsigned n)
+{
+    return check_heap_rec(heap, n, 0);
+}
+
+
+void pretty_print_heap(FILE* out, const int* v, unsigned n)
+{
+    unsigned w = ints_width(v, n);
+    unsigned h = log2(n);
+    unsigned t = (w + 1) * pow(2, h);
+    unsigned line = 0;
+    unsigned i = 0;
+    while (line <= h)
+    {
+        unsigned c = pow(2, line);
+        unsigned space = t / c - w;
+        line++;
+        fprintf(out, "%*s%*d", space / 2, "", w, v[i++]);
+        for (unsigned j = 0; j < c - 1; j++)
+        {
+            int val = v[i++];
+            if (i > n)
+                break;
+            fprintf(out, "%*s%*d", space, "", w, val);
+            if (i > n)
+                break;
+        }
+        fprintf(out, "\n");
+    }
+}
+
+int pop_heap(int* heap, unsigned* n)
+{
+    int pop = heap[0];
+    heap[0] = heap[*n - 1];
+    *n = *n - 1;
+    heapify(heap, 0, *n);
+    return pop;
+}
+
+void heap_sort(int* tab, unsigned n)
+{
+    make_heap(tab, n);
+    for (unsigned i = n - 1; i != 0; i--)
+    {
+        int save = tab[0];
+        tab[0] = tab[i];
+        tab[i] = save;
+        heapify(tab, 0, i);
+    }
+}
+
+void heapify_cmp(int* v, unsigned i, unsigned n, int (*cmp)(int a, int b))
+{
+    unsigned l = 2 * i + 1;
+    unsigned r = 2 * i + 2;
+    unsigned g = 0;
+    if ((l < n) && (cmp(v[l], v[i]) == 1))
+        g = l;
+    else
+        g = i;
+    if ((r < n) && (cmp(v[r], v[g]) == 1))
+        g = r;
+    if (g != i)
+    {
+        int save = v[i];
+        v[i] = v[g];
+        v[g] = save;
+        heapify_cmp(v, g, n, cmp);
+    }
+}
+
+void make_heap_cmp(int* v, unsigned n, int (*cmp)(int a, int b))
+{
+    unsigned i = n / 2 - 1;
+    for (; i != 0; i--)
+        heapify_cmp(v, i, n, cmp);
+    if (i == 0)
+        heapify_cmp(v, 0, n, cmp);
+}
+
+bool check_heap_cmp_rec(const int *heap, unsigned n, int (*cmp)(int a, int b),
+                        unsigned i)
+{
+    unsigned l = i * 2 + 1;
+    unsigned r = i * 2 + 2;
+    if (l >= n)
+        return true;
+    if (r >= n)
+    {
+        if (cmp(heap[l], heap[i]) == -1)
+            return true;
+        return false;
+    }
+    if ((cmp(heap[i], heap[l]) == -1) || (cmp(heap[i], heap[r]) == -1))
+        return false;
+    return check_heap_cmp_rec(heap, n, cmp, l) && check_heap_cmp_rec(heap, n, cmp, r);
+}
+
+bool check_heap_cmp(const int* v, unsigned n, int (*cmp)(int a, int b))
+{
+    return check_heap_cmp_rec(v, n, cmp, 0);
+}
+
+int pop_heap_cmp(int* heap, unsigned* n, int (*cmp)(int a, int b))
+{
+    int pop = heap[0];
+    heap[0] = heap[*n - 1];
+    *n = *n - 1;
+    heapify_cmp(heap, 0, *n, cmp);
+    return pop;
+}
+void heap_sort_cmp(int* tab, unsigned n, int (*cmp)(int a, int b))
+{
+    make_heap_cmp(tab, n, cmp);
+    for (unsigned i = n - 1; i != 0; i--)
+    {
+        int save = tab[0];
+        tab[0] = tab[i];
+        tab[i] = save;
+        heapify_cmp(tab, 0, i, cmp);
+    }
+}
+
+unsigned partition_cmp(int* tab, unsigned b, unsigned e,
+                       unsigned p, int (*cmp)(int a, int b))
+{
+    if (e == 0)
+        return 0;
+    int x = tab[p];
+    unsigned i = b;
+    unsigned j = e - 1;
+    while (true)
+    {
+        while (i < e && cmp(tab[i], x) < 0)
+            i++;
+        while (j < e && cmp(tab[j], x) > 0)
+            j--;
+        if (i >= j)
+            return i + (i == b);
+        int save = tab[i];
+        tab[i++] = tab[j];
+        tab[j--] = save;
+    }
+}
+
+unsigned pivot_first(const int* tab, unsigned l, unsigned r,
+                     int (*cmp)(int a, int b))
+{
+    (void) tab;
+    (void) r;
+    (void) cmp;
+    return l;
+}
+
+unsigned pivot_rand(const int* tab, unsigned l, unsigned r,
+                    int (*cmp)(int a, int b))
+{
+    (void) tab;
+    return l + (rand() % (r - l));
+}
+
+unsigned pivot_median3(const int* tab, unsigned l, unsigned r,
+                      int (*cmp)(int a, int b))
+{
+    int m = l + (r - l) / 2;
+    int mid = tab[m];
+    int left = tab[l];
+    int right = tab[r - 1];
+    int max = left;
+    int ret = l;
+    if (cmp(max, mid) >= 0)//min
+    {
+        max = mid;
+        ret = m;
+    }
+    int min = left;
+    int ret2 = l;
+    if (cmp(min, mid) < 0)//max
+    {
+        min = mid;
+        ret2 = m;
+    }
+    if (cmp(min, right) >= 0)
+    {
+        min = right;
+        ret2 = r - 1;
+    }
+    if (cmp(max, min) < 0)//max
+    {
+        return ret2;
+    }
+    return ret;
+}
+
+void quick_sort_cmp_rec(int* tab, unsigned b, unsigned e,
+                    unsigned (*pivot)(const int* tab, unsigned l, unsigned r,
+                                      int (*cmp)(int a, int b)),
+                    int (*cmp)(int a, int b))
+{
+    if ((e - b) <= 1)
+        return;
+    unsigned p = pivot(tab, b, e, cmp);
+    unsigned m = partition_cmp(tab, b, e, p, cmp);
+    quick_sort_cmp_rec(tab, b, m, pivot, cmp);
+    quick_sort_cmp_rec(tab, m, e, pivot, cmp);
+}
+
+void quick_sort_cmp(int* tab, unsigned count,
+                    unsigned (*pivot)(const int* tab, unsigned l, unsigned r,
+                                      int (*cmp)(int a, int b)),
+                    int (*cmp)(int a, int b))
+{
+    quick_sort_cmp_rec(tab, 0, count, pivot, cmp);
+}
+
+
+
+
+void quick_sort_cmp_loop_rec(int* tab, unsigned b, unsigned e,
+                         unsigned (*pivot)(const int* tab, unsigned l, unsigned r,
+                                           int (*cmp)(int a, int b)),
+                         int (*cmp)(int a, int b))
+{
+    while ((e - b) > 1)
+    {
+        unsigned p = pivot(tab, b, e, cmp);
+        unsigned m = partition_cmp(tab, b, e, p, cmp);
+        unsigned l = m - b;
+        if (l < m - l)
+        {
+            quick_sort_cmp_loop_rec(tab, b, m, pivot, cmp);
+            b = m;
+        }
+        else
+        {
+            quick_sort_cmp_loop_rec(tab, m, e, pivot, cmp);
+            e = m;
+        }
+        
+    }
+}
+
+void quick_sort_cmp_loop(int* tab, unsigned count,
+                         unsigned (*pivot)(const int* tab, unsigned l, unsigned r,
+                                           int (*cmp)(int a, int b)),
+                         int (*cmp)(int a, int b))
+{
+    quick_sort_cmp_loop_rec(tab, 0, count, pivot, cmp);
+}
+
+
+
+unsigned small_threshold = 10;
+    
+void quick_sort_cmp_adapt(int* tab, unsigned count,
+                          unsigned (*pivot)(const int* tab, unsigned l, unsigned r,
+                                            int (*cmp)(int a, int b)),
+                          int (*cmp)(int a, int b))
+{
+    if (count < small_threshold)
+        quick_sort_cmp(tab, count, pivot, cmp);
+    else
+        quick_sort_cmp_loop_rec(tab, 0, count, pivot, cmp);
+}
+
+
+void intro_sort_cmp_rec(int* tab, unsigned b, unsigned e, unsigned max,
+                        int (*cmp)(int a, int b))
+{
+    if (e - b > 1)
+    {
+        if (max == 0)
+            heap_sort_cmp(tab, e, cmp);
+        else
+        {
+            if (e < small_threshold)
+            {
+                insert_sort_cmp(tab, e, cmp);
+            }
+            else
+            {
+                while ((e - b) > 1)
+                {
+                    if (max == 0)
+                    {
+                        heap_sort_cmp(tab, e, cmp);
+                        return;
+                    }
+                    else
+                    {
+                        unsigned p = pivot_median3(tab, b, e, cmp);
+                        unsigned m = partition_cmp(tab, b, e, p, cmp);
+                        unsigned l = m - b;
+                        max--;
+                        if (l < m - l)
+                        {
+                            intro_sort_cmp_rec(tab, b, m, max, cmp);
+                            b = m;
+                        }
+                        else
+                        {
+                            intro_sort_cmp_rec(tab, m, e, max, cmp);
+                            e = m;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void intro_sort_cmp(int* tab, unsigned count, int (*cmp)(int a, int b))
+{
+    intro_sort_cmp_rec(tab, 0, count, 2 * log2(count), cmp);
+}
+
+unsigned int rec(const unsigned int *values, unsigned count,
+                 unsigned int amount, unsigned current, unsigned last)
+{
+    if (amount == 0)
+        return 1;
+    if (amount > last || count <= current)
+        return 0;
+    unsigned w = 0;
+    unsigned i = 0;
+    w += rec(values, count, amount - values[current], current, last);
+    i += rec(values, count, amount, current + 1, last);
+    return w + i;
+}
+
+unsigned int
+coin_combo(const unsigned int* values, unsigned count, unsigned int amount)
+{
+    return rec(values, count, amount, 0, amount);
+}
+
+
+
+
+
+
+int increasing(int a, int b)
+{
+    if (a < b)
+        return -1;
+    return a > b;
+}
+
+int decreasing(int a, int b)
+{
+    if (a > b)
+        return -1;
+    return a < b;
+}
+
+#include <stdint.h>
+
+uintmax_t cmp_count;   // include <stdint.h>
+
+int my_decreasing(int a, int b)
+{
+    ++cmp_count;
+    if (a < b)
+        return -1;
+    return a > b;
+}
+
+int my_increasing(int a, int b)
+{
+    ++cmp_count;
+    if (a < b)
+        return -1;
+    return a > b;
+}
+
+#define mycheck(fun)\
+    {                                                               \
+    memcpy(tab2, tab1, tsize * sizeof(int));                        \
+    clock_t before = clock();                                       \
+    fun(tab2, tsize, pivot_median3, increasing);                    \
+    clock_t after = clock();                                        \
+    printf(#fun " used %ju ticks\n", (uintmax_t) (after - before)); \
+    }
+
+void median_of_3_killer(int* tab, unsigned count)
+{
+    assert((count & 1) == 0);
+    unsigned k = count / 2;
+    for (unsigned i = 1; i <= k; ++i)
+    {
+        tab[i - 1] = (i & 1) ? i : k + i - 1;
+        tab[k + i - 1] = 2 * i;
+    }
+}
+
+int main()
+{
+    unsigned coins[] = { 50, 1, 5, 10, 20, 2 };
+    printf("coin_combo(..., 10) = %u\n", coin_combo(coins, 6, 10));
+    printf("coin_combo(..., 100) = %u\n", coin_combo(coins, 6, 100));
+}

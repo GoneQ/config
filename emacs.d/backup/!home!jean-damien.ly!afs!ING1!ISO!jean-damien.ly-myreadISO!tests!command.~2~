@@ -1,0 +1,17 @@
+ls
+ls SRC
+help
+info
+cd
+cd SRC
+cd ../PROVIDED
+ls
+pwd
+cd -
+ls
+pwd
+cd
+get SRC/GET.C
+tree
+quit abc
+quit

@@ -1,0 +1,20 @@
+#ifndef STACK_H
+#define STACK_H
+
+#include <stdlib.h>
+#include "node.h"
+
+struct stack
+{
+    struct node *vector;
+    struct stack *next;
+    struct stack *prev;
+};
+
+struct stack *stack_init(struct node *vector);
+struct stack *stack_push(struct stack **stack, struct node *vector);
+struct node *stack_pop(struct stack **stack);
+struct stack *stack_destroy(struct stack *stack);
+struct stack *stack_copy(struct stack *stack);
+
+#endif /* !STACK_H */

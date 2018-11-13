@@ -1,0 +1,5 @@
+#include "libparser.h"
+#include "raytracer.h"
+
+FILE *init_image(char *filename, int w, int h);
+void set_pixel(FILE *out, vec3_t color, int w, int h);

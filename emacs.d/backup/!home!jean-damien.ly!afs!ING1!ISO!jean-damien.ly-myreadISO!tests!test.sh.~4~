@@ -1,0 +1,31 @@
+#!/bin/sh
+echo
+echo
+
+
+
+while IFS='' read line; do
+    T=$(printf "$stm" | ./my_read_iso myiso.iso >/dev/null < $line)
+    expected=$(printf "$stm" | ./provde/my_read_iso myiso.iso >/dev/null < $line)
+    if [ "$T" = "$expected" ]; then
+        echo "$line OK"
+    else
+        echo "$line FAILED"
+    fi
+done < tests/command
+
+
+NumTest=1
+stmy="help\nquit\n"
+T=$(printf "$stm" | ./my_read_iso myiso.iso >/dev/null )
+error=$?
+expected=$(printf "$stm" | ./provided/my_read_iso myiso.iso >/dev/null )
+
+if [ "$T" = "$expected" ]; then
+    echo "Test $NumTest got [$T]"
+else
+    echo Error test $NumTest
+    echo "got [$T]"
+    echo "expected [$expected]"
+    exit
+fi

@@ -1,0 +1,10 @@
+
+-d
+-L
+-T
+-H
+-P
+-L -H -P -d
+-d -L -H -P
+-d -H -P -L
+-H -P -L -d

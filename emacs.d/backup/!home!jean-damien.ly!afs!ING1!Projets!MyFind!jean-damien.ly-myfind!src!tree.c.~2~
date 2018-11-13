@@ -1,0 +1,128 @@
+#include "myfind.h"
+
+static struct node *build_node_exec(int argc, char *argv[], int *begin)
+{
+    struct node *new = calloc(1, sizeof(struct node));
+    if (!new)
+        return NULL;
+    new->type = ELSE;
+    new->start = *begin;
+    while((*begin < argc) && (my_strcmp(argv[*begin], ";")))
+        *begin = *begin + 1;
+    new->end = *begin;
+    new->max = argc;
+    return new;
+}
+
+static struct node *build_node_else(int argc, char *argv[], int *begin)
+{
+    if ((*begin + 1 == argc) && (my_strcmp(argv[*begin], "-print")))
+        return NULL;
+    struct node *new = calloc(1, sizeof(struct node));
+    if (!new)
+        return NULL;
+    new->type = ELSE;
+    new->start = *begin;
+    if (my_strcmp(argv[*begin], "-print") == 0)
+        *begin = *begin - 1;
+    *begin = *begin + 2;
+    new->end = *begin;
+    new->max = argc;
+    return new;
+}
+
+static struct node *build_node(int argc, char *argv[], int *begin)
+{
+    if (my_strcmp(argv[*begin], "-exec") == 0)
+        return build_node_exec(argc, argv, begin);
+    return build_node_exec(argc, argv, begin);
+}
+
+static struct node *free_and_return(struct node *r1, struct node *r2,
+                                    struct node *r3, struct node *r4)
+{
+    if (r1 != NULL)
+        free_tree(r1);
+    if (r2 != NULL)
+        free_tree(r2);
+    if (r3 != NULL)
+        free(r3);
+    return r4;
+}
+
+static struct node *build_else(char *v[], struct node *r, int *i);
+static struct node *exp_build_tree(char *v[], struct node *r, int *i,
+                                   struct node *l)
+{
+    r->type = AND;
+    if (!l)
+    {
+        struct node *left = build_node(r->max, v, i);
+        if (!left)
+            return r;
+        if (*i >= r->max)
+            return free_and_return(NULL, r, NULL, left);
+        r->left = left;
+    }
+    else
+        r->left = l;
+    if (*i  >= r->max)
+        return free_and_return(NULL, NULL, r, l);
+    if ((my_strcmp(v[*i], "-o") == 0))
+    {
+        r->type = OR;
+        struct node *new = calloc(1, sizeof(struct node));
+        if (!new)
+            return free_and_return(r, l, NULL, NULL);
+        new->max = r->max;
+        *i = *i + 1;
+        r->right = exp_build_tree(v, new, i, NULL);
+        return r;
+    }
+    return build_else(v, r, i);
+}
+
+
+static struct node *build_else(char *v[], struct node *r, int *i)
+{
+    if ((my_strcmp(v[*i], "-a") == 0))
+        *i = *i + 1;
+    r->right = build_node(r->max, v, i);
+    if (!r->right)
+        return free_and_return(NULL, NULL, r, r->left);
+    struct node *new = calloc(1, sizeof(struct node));
+    if (!new)
+        return free_and_return(r, r->left, NULL, NULL);
+    new->max = r->max;
+    return exp_build_tree(v, new, i, r);
+}
+
+struct node *build_expression(int argc, char *argv[], int begin)
+{
+    struct node *root = calloc(1, sizeof(struct node));
+    if (root)
+    {
+        int i = begin;
+        if (i + 1 < argc)
+        {
+            root->max = argc;
+            root = exp_build_tree(argv, root, &i, NULL);
+        }
+        else
+        {
+            if (my_strcmp(argv[i], "-print") == 0)
+            {
+                root->type = ELSE;
+                root->start = begin;
+                root->end = i + 1;
+            }
+            else
+            {
+                warnx("missing argument to '%s'", argv[i]);
+                free(root);
+                return NULL;
+            }
+        }
+    }
+    return root;
+}

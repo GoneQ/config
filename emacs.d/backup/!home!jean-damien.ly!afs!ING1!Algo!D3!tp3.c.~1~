@@ -1,0 +1,243 @@
+#include <stdio.h>
+#include <math.h>
+#include <string.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <time.h>
+
+unsigned int_width(int i)
+{
+    if (i == 0)
+        return 1;
+    unsigned res = 0;
+    if (i < 0)
+    {
+        i = -i;
+        res++;
+    }
+    while (i != 0)
+    {
+        i = i / 10;
+        res++;
+    }
+    return res;
+}
+
+/*
+unsigned ints_width(const int* tab, unsigned count)
+{
+    unsigned max_pos = 0;
+    int max = tab[0];
+    if (max < 0)
+        max = -max;
+    unsigned res = 0;
+    int a = 0;
+    for (unsigned i = 1; i < count; ++i)
+    {
+        int current = tab[i];
+       if (current < 0)
+        {
+            current = (-current);
+            max = max / 10;
+            a = 1;
+        }
+        if (current > max)
+        {
+            max = current;
+            max_pos = i;
+        }
+        else if (a == 1)
+        {
+            a = 0;
+            max = max * 10;
+        }
+
+    }
+    res += int_width(tab[max_pos]);
+    return res;
+}
+*/
+
+unsigned ints_width(const int *tab, unsigned count)
+{
+    int max = int_width(tab[0]);
+    for (unsigned i = 1; i < count; i++)
+    {
+        int cur = int_width(tab[i]);
+        if (max < cur)
+            max = cur;
+    }
+    return max;
+}
+
+void print_int_array(FILE* out, const int* tab, unsigned count)
+{
+    int width = ints_width(tab, count);
+    int col_width = int_width(count - 1);
+    int col = col_width + 2;
+    fprintf(out, "%*s[0]", col_width - 1, "");
+    for (unsigned i = 0; i < count; i++)
+    {
+        fprintf(out, " %*s%d", width - int_width(tab[i]), "", tab[i]);
+        col += width + 1;
+        if ((col + width + 1 > 80) && (i + 1 < count))
+        {
+            int space = col_width - int_width(i + 1);
+            fprintf(out, "\n");
+            if (space <= 0)
+                fprintf(out, "[%d]", i + 1);
+            else
+                fprintf(out, "%*s[%d]", space, "", i + 1);
+            col = col_width + 2;
+        }
+    }
+    fprintf(out, "\n");
+}
+
+void insert_sort(int* tab, unsigned count)
+{
+    for (unsigned i = 1; i < count; ++i)
+    {
+        int save = tab[i];
+        unsigned j = 0;
+        for (; j < i; ++j)
+        {
+            if (tab[j] < save)
+                continue;
+            break;
+        }
+        for (unsigned k = i; k > j; k--)
+        {
+            tab[k] = tab[k - 1];
+        }
+        tab[j] = save;
+    }
+}
+
+
+void insert_sort_cmp(int* tab, unsigned count, int (*cmp)(int a, int b))
+{
+    for (unsigned i = 1; i < count; ++i)
+    {
+        int save = tab[i];
+        int j = i - 1;
+        while ((j >= 0) && (cmp(save, tab[j]) == -1))
+        {
+            tab[j + 1] = tab[j];
+            j = j - 1;
+        }
+        tab[j + 1] = save;
+    }
+}
+
+unsigned linear_search(const int* tab, unsigned count, int val,
+                       int (*cmp)(int a, int b))
+{
+    unsigned i = 0;
+    for (; (i < count) && (cmp(tab[i], val) == -1); i++)
+        continue;
+    return i;
+}
+
+unsigned binary_search(int* tab, unsigned count, int val,
+                       int (*cmp)(int a, int b))
+{
+    unsigned b = 0;
+    unsigned e = count;
+    while (b < e)
+    {
+        unsigned m = b + ((e - b) / 2);
+        int res = cmp(val, tab[m]);
+        if (res == 0)
+            return m;
+        else
+        {
+            if (res == -1)
+                e = m;
+            else
+                b = m + 1;
+        }
+    }
+    return b;
+}
+
+void bs_insert_sort_cmp(int *tab, unsigned count, int (*cmp)(int a, int b))
+{
+    for (unsigned i = 1; i < count; i++)
+    {
+        int key = tab[i];
+        int j = binary_search(tab, i, key, cmp);
+        memmove(tab + j + 1, tab + j, (i - j) * sizeof(int));
+        tab[j] = key;
+    }
+}
+
+unsigned interpolate(int *tab, unsigned b, unsigned e, int val,
+                     int (*cmp)(int, int))
+{
+    int res1 = cmp(tab[b], val);
+    int res2 = cmp(tab[e], val);
+    if (res1 >= 0)
+        return b;
+    if (res2 <= 0)
+        return e;
+    float diff1 = (tab[e] - tab[b]);
+    float diff2 = (e - b);
+    float slope = diff1 / diff2;
+    float res = (val - tab[b]) / slope + b;
+    return roundf(res);
+}
+
+unsigned interpolation_search(int *tab, unsigned count, int val,
+                              int (*cmp)(int a, int b))
+{
+    unsigned b = 0;
+    unsigned e = count;
+    while (b < e)
+    {
+        unsigned m = interpolate(tab, b, e - 1, val, cmp);
+        int res = cmp(val, tab[m]);
+        if (res == 0)
+            return m;
+        else
+        {
+            if (res == -1)
+                e = m;
+            else
+                b = m + 1;
+        }
+    }
+    return b;
+}
+
+unsigned cmp_count;
+
+int increasing(int a, int b)
+{
+    ++cmp_count;
+    if (a < b)
+        return -1;
+    return a > b;
+}
+
+#define my_test(val)\
+    cmp_count = 0;                                           \
+    printf("interpolation_search(a, %u, %d, increasing) = %u\n",        \
+           asize, (val), interpolation_search(a, asize, (val), increasing)); \
+    printf("\twith %u comparisons\n", cmp_count);
+
+int main()
+{
+    int a[] = { 1, 2, 3, 4, 5, 6, 9, 12, 15, 20, 25, 35, 38, 40, 41 };
+    unsigned asize = sizeof(a) / sizeof(*a);
+    puts("a[]:");
+    print_int_array(stdout, a, asize);
+    my_test(0);
+    my_test(6);
+    my_test(8);
+    my_test(20);
+    my_test(41);
+    my_test(42);
+    my_test(-2147483647 - 1);
+    my_test(2147483647);
+}

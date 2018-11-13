@@ -1,0 +1,5 @@
+#include "myiso.h"
+
+void cd_command(char *fp, char *read, int index)
+{
+}

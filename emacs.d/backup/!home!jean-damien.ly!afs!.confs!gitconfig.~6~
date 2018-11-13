@@ -1,0 +1,14 @@
+
+[user]
+	name = Jean Damien Ly
+	email = jean-damien.ly@epita.fr
+[color]
+	ui = true
+[push]
+	default = simple
+[core]
+	editor = emacs
+[pull]
+	rebase = true
+[alias]
+	tree = shortlog -s -n --all && git log --graph --full-history --all --color --date=short --pretty=format:\"%Cred%x09%h %Creset%ad%Cblue%d %Creset %s %C(bold)(%an)%Creset\"

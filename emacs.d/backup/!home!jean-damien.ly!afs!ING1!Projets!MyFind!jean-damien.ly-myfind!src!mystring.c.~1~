@@ -1,0 +1,93 @@
+#include "myfind.h"
+
+size_t my_strlen(char *s)
+{
+    size_t i = 0;
+    for (; s[i] != '\0'; i++);
+    return i;
+}
+
+char *my_strncpy(char *d, char *s, size_t n)
+{
+    size_t i = 0;
+    for (; ((i < n) && (s[i] != '\0')); i++)
+        d[i] = s[i];
+    d[i] = '\0';
+    return d;
+}
+
+int my_strcmp(char *a, char *b)
+{
+    int i = 0;
+    while ((a[i] != '\0') && (b[i] != '\0') && (a[i] == b[i]))
+    {
+        i++;
+    }
+    if (a[i] != b[i])
+        return 1;
+    return 0;
+}
+
+char *my_strcat(char *n, char *d, char *s)
+{
+    int i = 0;
+    for (; d[i] != '\0'; i++)
+        n[i] = d[i];
+    if ((d[i - 1] == '/') && (s[0] == '/'))
+    {
+        i--;
+    }
+    if ((d[i - 1] != '/') && (s[0] != '/'))
+        n[i++] = '/';
+    int j = i;
+    for (; s[j - i] != '\0'; j++)
+    {
+        n[j] = s[j - i];
+    }
+    n[j] = '\0';
+    return n;
+}
+
+int check_type(char *old, char *filename, char c)
+{
+    char cur[my_strlen(old) + strlen(filename)];
+    my_strcat(cur, old, filename);
+    struct stat *statbuf = malloc(sizeof(struct stat));
+    int st = lstat(cur, statbuf);
+    if (st == -1)
+        warnx("cannot do <stat>: %s", cur);
+    mode_t type = statbuf->st_mode;
+    free(statbuf);
+    if (c == 'l')
+        return S_ISLNK(type);
+    if (c == 'd')
+        return S_ISDIR(type);
+    if (c == 'b')
+        return S_ISBLK(type);
+    if (c == 'c')
+        return S_ISCHR(type);
+    if (c == 'f')
+        return S_ISREG(type);
+    if (c == 'p')
+        return S_ISFIFO(type);
+    if (c == 's')
+        return S_ISSOCK(type);
+    return 0;
+}
+
+void first_print(char *s, int argc, char *argv[])
+{
+    DIR *dr = opendir(s);
+    if (dr != NULL)
+    {
+        char *exp = "";
+        int got = get_expression(argc, argv, &exp);
+        if ((got == 1) && (fnmatch(exp, s, 0) == 0))
+            printf("%s\n", s);
+        else if ((got == -1) && (check_type(s, s, exp[0])))
+            printf("%s\n", s);
+        else if (got == 0)
+            printf("%s\n", s);
+        closedir(dr);
+    }
+}

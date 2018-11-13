@@ -1,0 +1,127 @@
+#include <stdio.h>
+#include <math.h>
+
+unsigned int_width(int i)
+{
+    if (i == 0)
+        return 1;
+    unsigned res = 0;
+    if (i < 0)
+    {
+        i = -i;
+        res++;
+    }
+    while (i != 0)
+    {
+        i = i / 10;
+        res++;
+    }
+    return res;
+}
+
+/*
+unsigned ints_width(const int* tab, unsigned count)
+{
+    unsigned max_pos = 0;
+    int max = tab[0];
+    if (max < 0)
+        max = -max;
+    unsigned res = 0;
+    int a = 0;
+    for (unsigned i = 1; i < count; ++i)
+    {
+        int current = tab[i];
+       if (current < 0)
+        {
+            current = (-current);
+            max = max / 10;
+            a = 1;
+        }
+        if (current > max)
+        {
+            max = current;
+            max_pos = i;
+        }
+        else if (a == 1)
+        {
+            a = 0;
+            max = max * 10;
+        }
+
+    }
+    res += int_width(tab[max_pos]);
+    return res;
+}
+*/
+
+unsigned ints_width(const int *tab, unsigned count)
+{
+    int max = int_width(tab[0]);
+    for (unsigned i = 1; i < count; i++)
+    {
+        int cur = int_width(tab[i]);
+        if (max < cur)
+            max = cur;
+    }
+    return max;
+}
+
+void print_int_array(FILE* out, const int* tab, unsigned count)
+{
+    int width = ints_width(tab, count);
+    int col_width = int_width(count - 1);
+    int col = col_width + 2;
+    fprintf(out, "%*s[0]", col_width - 1, "");
+    for (unsigned i = 0; i < count; i++)
+    {
+        fprintf(out, " %*s%d", width - int_width(tab[i]), "", tab[i]);
+        col += width + 1;
+        if ((col + width + 1 > 80) && (i + 1 < count))
+        {
+            int space = col_width - int_width(i + 1);
+            fprintf(out, "\n");
+            if (space <= 0)
+                fprintf(out, "[%d]", i + 1);
+            else
+                fprintf(out, "%*s[%d]", space, "", i + 1);
+            col = col_width + 2;
+        }
+    }
+    fprintf(out, "\n");
+}
+
+void insert_sort(int* tab, unsigned count)
+{
+    for (unsigned i = 1; i < count; ++i)
+    {
+        int save = tab[i];
+        unsigned j = 0;
+        for (; j < i; ++j)
+        {
+            if (tab[j] < save)
+                continue;
+            break;
+        }
+        for (unsigned k = i; k > j; k--)
+        {
+            tab[k] = tab[k - 1];
+        }
+        tab[j] = save;
+    }
+}
+
+
+void insert_sort_cmp(int* tab, unsigned count, int (*cmp)(int a, int b))
+{
+    for (unsigned i = 1; i < count; ++i)
+    {
+        int save = tab[i];
+        int j = i - 1;
+        while ((j >= 0) && (cmp(save, tab[j]) == -1))
+        {
+            tab[j + 1] = tab[j];
+            j = j - 1;
+        }
+        tab[j + 1] = save;
+    }
+}

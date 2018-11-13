@@ -1,0 +1,54 @@
+#include "myfind.h"
+
+int get_expression(int argc, char *argv[], char **exp)
+{
+    int i = 1;
+    for (; (i < argc) && (is_predicate(argv[i]) == 1); i++);
+    char *s = argv[0];
+    if ((i < argc) && (is_predicate(argv[i]) != -1) && (i < argc + 1))
+        s = argv[i + 1];
+    if (my_strcmp(s, "-name") == 0)
+    {
+        if (i + 1 < argc)
+        {
+            *exp = argv[i + 1];
+            return 1;
+        }
+    }
+    else if (my_strcmp(s, "-type") == 0)
+    {
+        if (i + 1 < argc)
+        {
+            *exp = argv[i + 1];
+            return 1;
+        }
+    }
+    else if ((my_strcmp(s, "-type") == 0) || (my_strcmp(s, "-name") == 0))
+        warnx("missing argument to '%s'", argv[i]);
+    return 0;
+}
+
+int check_expression(struct dirent *de, char *cur, int got, char *exp)
+{
+    if (got == 0)
+    {
+        return 1;
+    }
+    int len = my_strlen(cur) + my_strlen(de->d_name);
+    char new[len];
+    int i = 0;
+    for (; cur[i] != '\0'; i++)
+    {
+        new[i] = cur[i];
+    }
+    if ((de->d_name[0] != '/') && (cur[my_strlen(cur) - 1] != '/'))
+        new[i++] = '/';
+    int j = 0;
+    for (; de->d_name[j] != '\0'; j++)
+        new[i + j] = de->d_name[j];
+    new[i + j] = '\0';
+    int ret = fnmatch(exp, new, 0);
+    if (ret == 0)
+        return 1;
+    return 0;
+}

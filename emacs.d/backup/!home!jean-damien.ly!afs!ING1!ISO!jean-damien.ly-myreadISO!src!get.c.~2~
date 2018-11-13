@@ -1,0 +1,55 @@
+#include "myiso.h"
+
+void get_file(struct iso_dir *newid, char *filename)
+{
+    if (newid->type == 2)
+    {
+        warnx("entry '%s' is a directory", filename);
+    }
+    else
+    {
+        int o = open(filename, O_WRONLY | O_CREAT | O_TRUNC,
+                     S_IRWXU | S_IRGRP | S_IROTH);
+        write(o, get_mmap() + newid->data_blk.le * ISO_BLOCK_SIZE,
+              newid->file_size.le);
+        close(o);
+    }
+}
+
+static struct iso_dir *get_next(struct iso_dir *newid)
+{
+    void *tmp = newid;
+    char *tmp_char = tmp;
+    tmp_char += newid->dir_size;
+    tmp = tmp_char;
+    newid = tmp;
+    return newid;
+}
+
+void get_command(char **fp, char *read, int index)
+{
+    char cpy[strlen(read) + 1];
+    my_strcpy(cpy, read);
+    char path[strlen(read)];
+    fill_buff(path, strlen(read));
+    char *file = find_path(path, read);
+    void *root = check_argument(*fp, path, index);
+    if (root == NULL)
+        return;
+    struct iso_dir *newid = root;
+    int count = 0;
+    while (newid->dir_size != 0)
+    {
+        char *temp = get_name(newid, count++);
+        int len = get_len(newid->idf_len, temp);
+        char filename[len + 1];
+        my_strncpy(filename, temp, len);
+        if ((strcmp(filename, file) == 0))
+        {
+            get_file(newid, filename);
+            return;
+        }
+        newid = get_next(newid);
+    }
+    warnx("unable to find '%s' entry", cpy);
+}

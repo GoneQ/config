@@ -1,0 +1,15 @@
+CC ?= gcc
+CFLAGS = -Werror -Wall -Wextra -pedantic -std=c99 $(shell sdl2-config --cflags)
+LDLIBS = $(shell sdl2-config --libs) -lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_ttf
+#SRCS = $(wildcard src/*.c)
+SRCS = src/main.c
+OBJS = $(SRCS:.c=.o)
+EXEC = main
+
+all: $(OBJS)
+	$(CC) $(CFLAGS) $(LDLIBS) $(OBJS) -o $(EXEC)
+
+$(OBJS): $(SRCS)
+
+clean:
+	rm $(OBJS) $(EXEC)

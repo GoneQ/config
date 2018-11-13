@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include "../parser/libparser.h"
+#include "includes/raytracer.h"
+
+FILE *init_image(FILE *out, int w, int h)
+{
+    fprintf(out, "P3\n %d %d\n255\n", w, h);
+    return out;
+}
+void set_pixel(FILE *out, vec3_t color, int w, int h)
+{
+    static int i = 0;
+    static int j = 0;
+    if (i == h)
+        return;
+    int x = color.x;
+    int y = color.y;
+    int z = color.z;
+    fprintf(out, "%d %d %d  ", x, y, z);
+    j++;
+    if (j >= w)
+    {
+        j = 0;
+        i++;
+        fprintf(out, "\n");
+    }
+}
+
+int main(void)
+{
+    FILE *fp = fopen("test.ppm", "w+");
+    fp = init_image(fp, 640, 480);
+    for (int i = 0; i < 480; i++)
+    {
+        for (int j = 0; j < 640; ++j)
+        {
+            vec3_t color;
+            color.x = 255;
+            color.y = 0;
+            color.z = 255;
+            set_pixel(fp, color, 640, 480);
+        }
+    }
+    fclose(fp);
+}

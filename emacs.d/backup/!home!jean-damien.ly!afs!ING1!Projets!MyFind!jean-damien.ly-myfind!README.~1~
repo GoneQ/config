@@ -1,0 +1,30 @@
+README for MyFind Project:
+
+This is a simplified version of the find(1) command.
+This is an EPITA school project for the third year students.
+It took less than a week to make this project.
+
+This binary follows this format : ./myfind [options] [files] [expression]
+
+Available commands for myfind:
+          OPTIONS:
+                — -d: process each directory’s content before the directory
+                itself. By default, myfind visits directories in pre-order
+                (before their contents).
+                — -H: does not follow symbolic links,
+                except if it is given in the command line.
+                —
+                -L
+                :
+                myfind
+                follows symbolic links.
+                —
+                -P
+                :
+                myfind
+                never follows symbolic links.  This is the default behavior.
+
+Makefile:
+        — all:  Produces the myfind binary
+        — check:  Run the testsuite with myfind binary
+        — clean:  Delete everything produced by make

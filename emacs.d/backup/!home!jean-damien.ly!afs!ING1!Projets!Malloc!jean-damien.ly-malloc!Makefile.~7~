@@ -1,0 +1,21 @@
+CFLAGS = -Wall -Wextra -Werror -pedantic -std=c99 -g -fPIC -fvisibility=hidden -I./
+LDFLAGS = -shared
+TARGET_LIB = libmalloc.so
+SRCS = $(wildcard src/*.c)
+OBJS = $(SRCS:.c=.o)
+
+.PHONY: all ${TARGET_LIB} clean
+
+${TARGET_LIB}: ${OBJS}
+	${CC} ${LDFLAGS} -o $@ $^
+
+
+all: ${TARGET_LIB}
+
+libmalloc.so: ${TARGET_LIB}
+
+check: ${TARGET_LIB}
+	tests/test.sh
+
+clean:
+	${RM} ${TARGET_LIB} ${OBJS}

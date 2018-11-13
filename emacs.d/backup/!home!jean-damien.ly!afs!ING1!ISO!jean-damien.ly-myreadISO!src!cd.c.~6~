@@ -1,0 +1,82 @@
+#include "myiso.h"
+
+char *find_path_s(char *read)
+{
+    if (read[strlen(read) - 1] == '/')
+        read[strlen(read) - 1] = '\0';
+    int count = 0;
+    for (int i = 0; read[i] != '\0'; i++)
+    {
+       if (read[i] == '/')
+            count ++;
+    }
+    if (count == 0)
+        return read;
+    char *s = strrchr(read, '/');
+    return s + 1;
+}
+char *find_directory_name(char **fp, char *read)
+{
+    if (strcmp(read, "..") == 0)
+    {
+        void *ident = get_mmap() + ISO_PRIM_VOLDESC_BLOCK * ISO_BLOCK_SIZE;
+        struct iso_prim_voldesc *voldesc = ident;
+        struct iso_dir dir = voldesc->root_dir;
+        int index = dir.data_blk.le;
+        void *tmp = *fp;
+        if (!tmp)
+            return "";
+        char *tmpc = tmp;
+        tmpc += index * ISO_BLOCK_SIZE;
+        tmp = tmpc;
+        struct iso_dir *newid = tmp;
+        uint32_t save = newid->data_blk.le;
+        printf("save %d\n", save);
+        tmp = check_argument(*fp, "..", index);
+        newid = tmp;
+        while (newid->file_size.le != 0)
+        {
+            if (newid->data_blk.le == save)
+            {;
+                return get_name(newid, 3);
+            }
+            tmp = newid;
+            char *tmp_char = tmp;
+            tmp_char += newid->dir_size;
+            tmp = tmp_char;
+            newid = tmp;
+        }
+    }
+    return find_path_s(read);
+}
+
+void cd_command(char **fp, char *read, int index)
+{
+    if ((strcmp(read, "") == 0))
+    {
+        *fp = get_mmap();
+        printf("Changing to '/' directory\n");
+    }
+    else if (strcmp(read, ".") == 0)
+    {
+        printf("Changing to '%s' directory\n", find_directory_name(fp, read));
+    }
+    else
+    {
+        void *ident = get_mmap() + ISO_PRIM_VOLDESC_BLOCK * ISO_BLOCK_SIZE;
+        struct iso_prim_voldesc *voldesc = ident;
+        struct iso_dir dir = voldesc->root_dir;
+        index = dir.data_blk.le;
+        char cpy[strlen(read)];
+        strcpy(cpy, read);
+        char *directory = find_directory_name(fp, cpy);
+        void *tmp = check_argument(*fp, read, index);
+        if (!tmp)
+            return;
+        char *c = tmp;
+        c -= (index * ISO_BLOCK_SIZE);
+        tmp = c;
+        *fp = tmp;
+        printf("Changing to '%s' directory\n", directory);
+    }
+}

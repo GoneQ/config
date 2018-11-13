@@ -1,0 +1,54 @@
+#include "myfind.h"
+
+size_t my_strlen(char *s)
+{
+    size_t i = 0;
+    for (; s[i] != '\0'; i++);
+    return i;
+}
+
+char *my_strncpy(char *d, char *s, size_t n)
+{
+    size_t i = 0;
+    for (; ((i < n) && (s[i] != '\0')); i++)
+        d[i] = s[i];
+    d[i] = '\0';
+    return d;
+}
+
+int my_strcmp(char *a, char *b)
+{
+    int i = 0;
+    while ((a[i] != '\0') && (b[i] != '\0') && (a[i] == b[i]))
+    {
+        i++;
+    }
+    if (a[i] != b[i])
+        return 1;
+    return 0;
+}
+
+char *my_strcat(char *n, char *d, char *s)
+{
+    printf("have size %ld, %ld\n", my_strlen(d), my_strlen(s));
+    int i = 0;
+    for (; d[i] != '\0'; i++)
+        n[i] = d[i];
+    if ((d[i - 1] == '/') && (s[0] == '/'))
+    {
+        i--;
+    }
+    if ((d[i - 1] != '/') && (s[0] != '/'))
+    {
+        n[i] = '/';
+        i++;
+    }
+    int j = i;
+    for (; s[j - i] != '\0'; j++)
+    {
+        printf("try %d %d\n", j, j - i);
+        n[j] = s[j - i];
+    }
+    n[j] = '\0';
+    return n;
+}

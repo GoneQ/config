@@ -1,0 +1,4 @@
+CC ?= gcc
+CFLAGS = -Werror -Wall -Wextra -pedantic -std=c99
+SRCS = $(wildcard /src/*.c)
+OBJS = $(SRCS.c=.o)

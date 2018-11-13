@@ -1,0 +1,5 @@
+#include "control.h"
+
+enum move check_forward(struct car *car, enum move move);
+enum move check_right(struct car *car, enum move move);
+enum move check_left(struct car *car, enum move move);

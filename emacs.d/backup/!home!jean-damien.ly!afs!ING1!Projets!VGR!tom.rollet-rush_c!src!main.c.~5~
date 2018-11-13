@@ -1,0 +1,21 @@
+#include <SDL2/SDL.h>
+
+int main(void)
+{
+    if (SDL_Init(0) != 0)
+    {
+        //Error
+        return 1;
+    }
+    int posX = 0;
+    int posY = 0;
+    int sizeX = 600;
+    int sizeY = 800;
+    SDL_Window *window = SDL_CreateWindow("game", posX, posY, sizeX, sizeY, 0);
+    if (!window)
+    {
+        return 1;
+    }
+    SDL_Delay(5000);
+    SDL_Quit();
+}

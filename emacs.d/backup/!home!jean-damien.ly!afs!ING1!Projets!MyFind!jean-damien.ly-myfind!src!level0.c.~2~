@@ -1,0 +1,31 @@
+#include "myfind.h"
+
+int simple_current_find(char *current)
+{
+    DIR *dr = opendir(current);
+    if (dr == NULL)
+    {
+        warnx("nope");
+        return 1;
+    }
+    struct dirent *de;
+    while ((de = readdir(dr)) != NULL)
+    {
+        if (
+        printf("%s/%s\n", current, de->d_name);
+    }
+    closedir(dr);
+    return 0;
+}
+
+int simple_find(int argc, char *argv[])
+{
+    int ret = 0;
+    for (int i = 1; i < argc; i++)
+    {
+        int new = simple_current_find(argv[i]);
+        if (ret != 1)
+            ret = new;
+    }
+    return ret;
+}

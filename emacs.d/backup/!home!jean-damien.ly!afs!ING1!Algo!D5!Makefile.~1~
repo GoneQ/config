@@ -1,0 +1,11 @@
+CC ?= gcc
+CFLAGS = -std=c99 -Wextra -Wall -g
+SRCS = tp4.c
+OBJS = tp4.o
+EXEC = tp4
+
+all: $(OBJS)
+	$(CC) $(CFLAGS) $(SRCS) -lm -o $(EXEC)
+
+clean:
+	rm $(EXEC) $(OBJS)

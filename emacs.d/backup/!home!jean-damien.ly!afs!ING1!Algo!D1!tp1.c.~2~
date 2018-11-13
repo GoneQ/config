@@ -1,0 +1,26 @@
+#include <stdio.h>
+#include <maths.h>
+
+unsigned int_width(int i)
+{
+    unsigned res = 1;
+    if (i < 0)
+    {
+        i = -i;
+        res = 2;
+    }
+    while (i != 0)
+    {
+        i = i / 10;
+        res++;
+    }
+    return res;
+}
+
+int main(void)
+//int main(int argc, char* argv[])
+{
+    int a[] = { -42, -1, 0, 13, 9999, 10000, 10001 };
+    for (unsigned i = 0; i < sizeof(a) / sizeof(*a); ++i)
+        printf("int_width(%d) == %d\n", a[i], int_width(a[i]));
+}

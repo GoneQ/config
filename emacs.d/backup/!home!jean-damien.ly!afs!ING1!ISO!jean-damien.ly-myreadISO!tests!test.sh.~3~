@@ -1,0 +1,18 @@
+#!/bin/sh
+echo
+echo
+
+NumTest=1
+stmy="help\nquit\n"
+T=$(printf "$stm" | ./my_read_iso myiso.iso >/dev/null )
+error=$?
+expected=$(printf "$stm" | provided/my_read_iso myiso.iso >/dev/null )
+
+if [ "$T" = "$expected" ]; then
+    echo "Test $NumTest got [$T]"
+else
+    echo Error test $NumTest
+    echo "got [$T]"
+    echo "expected [$expected]"
+    exit
+fi

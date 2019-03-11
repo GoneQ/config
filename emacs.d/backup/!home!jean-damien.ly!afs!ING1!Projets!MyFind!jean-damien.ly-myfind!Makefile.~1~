@@ -1,9 +1,0 @@
-CC ?= gcc
-CFLAGS = -std=c99 -pedantic -Wextra -Werror -Wall -g
-OBJS = myfind.o
-EXEC = myfind
-
-all: $(OBJS) $(EXEC)
-
-clean:
-	rm $(EXEC) $(OBJS)

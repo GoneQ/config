@@ -1,4 +1,0 @@
-#!/bin/sh
-NumTest=1
-stmy="help\nquit\n"
-T=$(printf "$stm" | ./my_read_iso tests/

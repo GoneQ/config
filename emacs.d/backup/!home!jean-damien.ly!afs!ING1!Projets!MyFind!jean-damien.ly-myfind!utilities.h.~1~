@@ -1,7 +1,0 @@
-int check_type(char *cur, char *filename, char c);
-int is_predicate(char *s);
-void first_print(char *s, int argc, char *argv[]);
-void free_tree(struct node *tree);
-int got_express(int argc, char *argv[]);
-struct node *free_and_return(struct node *r1, struct node *r2,
-                             struct node *r3, struct node *r4);

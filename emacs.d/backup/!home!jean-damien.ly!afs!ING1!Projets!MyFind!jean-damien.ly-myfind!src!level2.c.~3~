@@ -1,6 +1,0 @@
-#include "myfind.h"
-
-int check_expressions(struct dirent *de, int argc, char *argv[])
-{
-    
-}

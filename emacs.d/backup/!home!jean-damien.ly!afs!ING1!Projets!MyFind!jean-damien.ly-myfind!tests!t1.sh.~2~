@@ -1,3 +1,0 @@
-#!/bin/bash
-
-./tests.sh 2>/dev/null

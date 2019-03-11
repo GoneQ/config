@@ -1,5 +1,0 @@
-#include "control.h"
-
-enum move check_forward(struct car *car, struct vector2 *next);
-enum move check_right(struct car *car, struct vector2 *next);
-enum move check_left(struct car *car, struct vector2 *next␇);
